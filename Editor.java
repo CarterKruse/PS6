@@ -1,212 +1,365 @@
-import java.util.ArrayList;
-import java.util.List;
 import java.awt.*;
 import java.awt.event.*;
-
 import javax.swing.*;
 
 /**
- * Client-server graphical editor
- * 
- * @author Chris Bailey-Kellogg, Dartmouth CS 10, Fall 2012; loosely based on CS 5 code by Tom Cormen
- * @author CBK, winter 2014, overall structure substantially revised
- * @author Travis Peters, Dartmouth CS 10, Winter 2015; remove EditorCommunicatorStandalone (use echo server for testing)
- * @author CBK, spring 2016 and Fall 2016, restructured Shape and some of the GUI
+ * Client-Server Graphical Editor
+ *
+ * @author Chris Bailey-Kellogg, Dartmouth CS 10, Fall 2012, Winter 2014
+ * @author Travis Peters, Dartmouth CS 10, Winter 2015
+ * @author CBK, Dartmouth CS 10, Spring 2016, Fall 2016
+ * @author Carter Kruse & John DeForest, Dartmouth CS 10, Spring 2022
  */
 
-public class Editor extends JFrame {	
-	private static String serverIP = "localhost";			// IP address of sketch server
-	// "localhost" for your own machine;
-	// or ask a friend for their IP address
+public class Editor extends JFrame
+{
+    // IP address of sketch server, "localhost" for your own machine or ask a friend for their IP address.
+    private static String serverIP = "localhost";
 
-	private static final int width = 800, height = 800;		// canvas size
+    private static final int width = 800, height = 800; // Canvas Size
 
-	// Current settings on GUI
-	public enum Mode {
-		DRAW, MOVE, RECOLOR, DELETE
-	}
-	private Mode mode = Mode.DRAW;				// drawing/moving/recoloring/deleting objects
-	private String shapeType = "ellipse";		// type of object to add
-	private Color color = Color.black;			// current drawing color
+    // Current Settings -> GUI
+    public enum Mode
+    {
+        DRAW, MOVE, RECOLOR, DELETE
+    }
 
-	// Drawing state
-	// these are remnants of my implementation; take them as possible suggestions or ignore them
-	private Shape curr = null;					// current shape (if any) being drawn
-	private Sketch sketch;						// holds and handles all the completed objects
-	private int movingId = -1;					// current shape id (if any; else -1) being moved
-	private Point drawFrom = null;				// where the drawing started
-	private Point moveFrom = null;				// where object is as it's being dragged
+    private Mode mode = Mode.DRAW; // Drawing/moving/recoloring/deleting objects.
+    private String shapeType = "Ellipse"; // Type of object to add.
+    private Color color = Color.black; // Current drawing color.
 
+    // Drawing State
+    private Shape currentShape = null; // Current shape (if any) being drawn.
+    private Sketch sketch; // Holds and handles all the completed objects.
+    private Point drawFrom = null; // Where the drawing started.
+    private Point moveFrom = null; // Where the object is as it's being dragged.
 
-	// Communication
-	private EditorCommunicator comm;			// communication with the sketch server
+    // Communication
+    private EditorCommunicator communicator; // Communication with the sketch server.
 
-	public Editor() {
-		super("Graphical Editor");
+    public Editor()
+    {
+        super("Graphical Editor");
 
-		sketch = new Sketch();
+        sketch = new Sketch();
 
-		// Connect to server
-		comm = new EditorCommunicator(serverIP, this);
-		comm.start();
+        // Connect to server.
+        communicator = new EditorCommunicator(serverIP, this);
+        communicator.start();
 
-		// Helpers to create the canvas and GUI (buttons, etc.)
-		JComponent canvas = setupCanvas();
-		JComponent gui = setupGUI();
+        // Helpers to create the canvas and GUI (buttons, etc.).
+        JComponent canvas = setupCanvas();
+        JComponent gui = setupGUI();
 
-		// Put the buttons and canvas together into the window
-		Container cp = getContentPane();
-		cp.setLayout(new BorderLayout());
-		cp.add(canvas, BorderLayout.CENTER);
-		cp.add(gui, BorderLayout.NORTH);
+        // Put the buttons and canvas together into the window.
+        Container cp = getContentPane();
+        cp.setLayout(new BorderLayout());
+        cp.add(canvas, BorderLayout.CENTER);
+        cp.add(gui, BorderLayout.NORTH);
 
-		// Usual initialization
-		setLocationRelativeTo(null);
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		pack();
-		setVisible(true);
-	}
+        // Usual Initialization
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        pack();
+        setVisible(true);
+    }
 
-	/**
-	 * Creates a component to draw into
-	 */
-	private JComponent setupCanvas() {
-		JComponent canvas = new JComponent() {
-			public void paintComponent(Graphics g) {
-				super.paintComponent(g);
-				drawSketch(g);
-			}
-		};
-		
-		canvas.setPreferredSize(new Dimension(width, height));
+    /**
+     * Setup Canvas - Creates a component to draw into.
+     */
+    private JComponent setupCanvas()
+    {
+        JComponent canvas = new JComponent()
+        {
+            public void paintComponent(Graphics g)
+            {
+                super.paintComponent(g);
+                drawSketch(g); // Calls a helper method to draw the sketch on g.
+                // System.out.println("Repainting!");
+            }
+        };
 
-		canvas.addMouseListener(new MouseAdapter() {
-			public void mousePressed(MouseEvent event) {
-				handlePress(event.getPoint());
-			}
+        canvas.setPreferredSize(new Dimension(width, height));
 
-			public void mouseReleased(MouseEvent event) {
-				handleRelease();
-			}
-		});		
+        canvas.addMouseListener(new MouseAdapter()
+        {
+            public void mousePressed(MouseEvent event)
+            {
+                handlePress(event.getPoint()); // Calls a helper method to handle the mouse press.
+                // System.out.println("Pressed At " + event.getPoint());
+            }
 
-		canvas.addMouseMotionListener(new MouseAdapter() {
-			public void mouseDragged(MouseEvent event) {
-				handleDrag(event.getPoint());
-			}
-		});
-		
-		return canvas;
-	}
+            public void mouseReleased(MouseEvent event)
+            {
+                handleRelease(); // Calls a helper method to handle the mouse release.
+                // System.out.println("Released At " + event.getPoint());
+            }
+        });
 
-	/**
-	 * Creates a panel with all the buttons
-	 */
-	private JComponent setupGUI() {
-		// Select type of shape
-		String[] shapes = {"ellipse", "freehand", "rectangle", "segment"};
-		JComboBox<String> shapeB = new JComboBox<String>(shapes);
-		shapeB.addActionListener(e -> shapeType = (String)((JComboBox<String>)e.getSource()).getSelectedItem());
+        canvas.addMouseMotionListener(new MouseAdapter()
+        {
+            public void mouseDragged(MouseEvent event)
+            {
+                handleDrag(event.getPoint()); // Calls a helper method to handle the mouse drag.
+                // System.out.println("Dragged To " + event.getPoint());
+            }
+        });
 
-		// Select drawing/recoloring color
-		// Following Oracle example
-		JButton chooseColorB = new JButton("choose color");
-		JColorChooser colorChooser = new JColorChooser();
-		JLabel colorL = new JLabel();
-		colorL.setBackground(Color.black);
-		colorL.setOpaque(true);
-		colorL.setBorder(BorderFactory.createLineBorder(Color.black));
-		colorL.setPreferredSize(new Dimension(25, 25));
-		JDialog colorDialog = JColorChooser.createDialog(chooseColorB,
-				"Pick a Color",
-				true,  //modal
-				colorChooser,
-				e -> { color = colorChooser.getColor(); colorL.setBackground(color); },  // OK button
-				null); // no CANCEL button handler
-		chooseColorB.addActionListener(e -> colorDialog.setVisible(true));
+        return canvas;
+    }
 
-		// Mode: draw, move, recolor, or delete
-		JRadioButton drawB = new JRadioButton("draw");
-		drawB.addActionListener(e -> mode = Mode.DRAW);
-		drawB.setSelected(true);
-		JRadioButton moveB = new JRadioButton("move");
-		moveB.addActionListener(e -> mode = Mode.MOVE);
-		JRadioButton recolorB = new JRadioButton("recolor");
-		recolorB.addActionListener(e -> mode = Mode.RECOLOR);
-		JRadioButton deleteB = new JRadioButton("delete");
-		deleteB.addActionListener(e -> mode = Mode.DELETE);
-		ButtonGroup modes = new ButtonGroup(); // make them act as radios -- only one selected
-		modes.add(drawB);
-		modes.add(moveB);
-		modes.add(recolorB);
-		modes.add(deleteB);
-		JPanel modesP = new JPanel(new GridLayout(1, 0)); // group them on the GUI
-		modesP.add(drawB);
-		modesP.add(moveB);
-		modesP.add(recolorB);
-		modesP.add(deleteB);
+    /**
+     * Setup GUI - Creates a panel with all the buttons
+     */
+    private JComponent setupGUI()
+    {
+        // Select type of shape.
+        String[] shapes = {"Ellipse", "Freehand", "Rectangle", "Segment"};
+        JComboBox<String> shapeB = new JComboBox<>(shapes);
+        shapeB.addActionListener(e -> shapeType = (String) ((JComboBox<String>) e.getSource()).getSelectedItem());
 
-		// Put all the stuff into a panel
-		JComponent gui = new JPanel();
-		gui.setLayout(new FlowLayout());
-		gui.add(shapeB);
-		gui.add(chooseColorB);
-		gui.add(colorL);
-		gui.add(modesP);
-		return gui;
-	}
+        // Select drawing/recoloring color. Following Oracle example.
+        JButton chooseColorB = new JButton("Choose Color");
+        JColorChooser colorChooser = new JColorChooser();
+        JLabel colorL = new JLabel();
+        colorL.setBackground(Color.black);
+        colorL.setOpaque(true);
+        colorL.setBorder(BorderFactory.createLineBorder(Color.black));
+        colorL.setPreferredSize(new Dimension(25, 25));
+        JDialog colorDialog = JColorChooser.createDialog(chooseColorB,
+                "Pick A Color",
+                true,  // Modal
+                colorChooser,
+                e ->
+                {
+                    color = colorChooser.getColor();
+                    colorL.setBackground(color);
+                },  // OK Button
+                null); // No CANCEL button handler.
+        chooseColorB.addActionListener(e -> colorDialog.setVisible(true));
 
-	/**
-	 * Getter for the sketch instance variable
-	 */
-	public Sketch getSketch() {
-		return sketch;
-	}
+        // Mode: draw, move, recolor, or delete.
+        JRadioButton drawB = new JRadioButton("Draw");
+        drawB.addActionListener(e -> mode = Mode.DRAW);
+        drawB.setSelected(true);
+        JRadioButton moveB = new JRadioButton("Move");
+        moveB.addActionListener(e -> mode = Mode.MOVE);
+        JRadioButton recolorB = new JRadioButton("Recolor");
+        recolorB.addActionListener(e -> mode = Mode.RECOLOR);
+        JRadioButton deleteB = new JRadioButton("Delete");
+        deleteB.addActionListener(e -> mode = Mode.DELETE);
+        ButtonGroup modes = new ButtonGroup(); // Make them act as radios (only one selected).
+        modes.add(drawB);
+        modes.add(moveB);
+        modes.add(recolorB);
+        modes.add(deleteB);
+        JPanel modesP = new JPanel(new GridLayout(1, 0)); // Group them on the GUI.
+        modesP.add(drawB);
+        modesP.add(moveB);
+        modesP.add(recolorB);
+        modesP.add(deleteB);
 
-	/**
-	 * Draws all the shapes in the sketch,
-	 * along with the object currently being drawn in this editor (not yet part of the sketch)
-	 */
-	public void drawSketch(Graphics g) {
-		// TODO: YOUR CODE HERE
-	}
+        // Put all the stuff into a panel.
+        JComponent gui = new JPanel();
+        gui.setLayout(new FlowLayout());
+        gui.add(shapeB);
+        gui.add(chooseColorB);
+        gui.add(colorL);
+        gui.add(modesP);
+        return gui;
+    }
 
-	// Helpers for event handlers
-	
-	/**
-	 * Helper method for press at point
-	 * In drawing mode, start a new object;
-	 * in moving mode, (request to) start dragging if clicked in a shape;
-	 * in recoloring mode, (request to) change clicked shape's color
-	 * in deleting mode, (request to) delete clicked shape
-	 */
-	private void handlePress(Point p) {
-		// TODO: YOUR CODE HERE
-	}
+    /**
+     * Get Sketch - Getter for the sketch instance variable.
+     */
+    public Sketch getSketch()
+    {
+        return sketch;
+    }
 
-	/**
-	 * Helper method for drag to new point
-	 * In drawing mode, update the other corner of the object;
-	 * in moving mode, (request to) drag the object
-	 */
-	private void handleDrag(Point p) {
-		// TODO: YOUR CODE HERE
-	}
+    /**
+     * Draw Sketch - Draws all the shapes in the sketch, along with the object currently being drawn in this editor (not
+     * yet part of the sketch).
+     */
+    public void drawSketch(Graphics g)
+    {
+        // Drawing all the shapes in the sketch.
+        for (Shape shape : sketch.getListOfShapes())
+            shape.draw(g);
 
-	/**
-	 * Helper method for release
-	 * In drawing mode, pass the add new object request on to the server;
-	 * in moving mode, release it		
-	 */
-	private void handleRelease() {
-		// TODO: YOUR CODE HERE
-	}
+        // Drawing the shape currently being drawn in the editor (not yet part of the sketch).
+        // If the current shape exists...
+        if (currentShape != null)
+            currentShape.draw(g); // Draw it.
+    }
 
-	public static void main(String[] args) {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				new Editor();
-			}
-		});	
-	}
+    // Helpers For Event Handlers
+
+    /**
+     * Helper Method - In drawing mode, start a new object, in moving mode, (request to) start dragging if clicked in a
+     * shape, in recoloring mode, (request to) change clicked shape's color, in deleting mode, (request to) delete
+     * clicked shape.
+     */
+    private void handlePress(Point p)
+    {
+        // In drawing mode, start a new object
+        if (mode == Mode.DRAW)
+        {
+            // Updating the drawFrom and moveFrom points.
+            drawFrom = p;
+            moveFrom = p;
+
+            // Creating a new shape based on the shapeType with the appropriate location and color.
+            switch (shapeType)
+            {
+                case "Ellipse" -> currentShape = new Ellipse(drawFrom.x, drawFrom.y, color);
+                case "Rectangle" -> currentShape = new Rectangle(drawFrom.x, drawFrom.y, color);
+                case "Segment" -> currentShape = new Segment(drawFrom.x, drawFrom.y, color);
+            }
+
+            // TODO - Polyline
+        }
+
+        // TODO - Check about sending a request to the server vs. simply handing the drag.
+        // In moving mode, (request to) start dragging if clicked in a shape.
+        else if (mode == Editor.Mode.MOVE)
+        {
+            // Cycling through the list of shapes in the sketch.
+            for (Shape shape : sketch.getListOfShapes())
+            {
+                // If the shape contains the (x, y) point...
+                if (shape.contains(p.x, p.y) && shape.getID() != null)
+                {
+                    currentShape = shape;
+                    moveFrom = p;
+                    handleDrag(p);
+                }
+            }
+        }
+
+        // In recoloring mode, (request to) change clicked shape's color.
+        else if (mode == Mode.RECOLOR)
+        {
+            // Cycling through the list of shapes in the sketch.
+            for (Shape shape : sketch.getListOfShapes())
+            {
+                // If the shape contains the (x, y) point...
+                if (shape.contains(p.x, p.y) && shape.getID() != null)
+                {
+                    // Passing the delete object request onto the server.
+                    communicator.send("RECOLOR " + shape.getID() + " " + color.getRGB());
+                }
+            }
+
+            repaint();
+        }
+
+        // In deleting mode, (request to) delete clicked shape.
+        else if (mode == Mode.DELETE)
+        {
+            // Cycling through the list of shapes in the sketch.
+            for (Shape shape : sketch.getListOfShapes())
+            {
+                // If the shape contains the (x, y) point...
+                if (shape.contains(p.x, p.y) && shape.getID() != null)
+                {
+                    // Passing the delete object request onto the server.
+                    communicator.send("DELETE " + shape.getID());
+                }
+            }
+
+            repaint();
+        }
+    }
+
+    /**
+     * Helper Method - In drawing mode, update the other corner of the object, in moving mode, (request to) drag the object.
+     */
+    private void handleDrag(Point p)
+    {
+        // In drawing mode, revise the shape as it is stretched out.
+        if (mode == Mode.DRAW)
+        {
+            // Check to make sure there is a shape.
+            if (currentShape != null)
+            {
+                if (shapeType.equals("Ellipse"))
+                {
+                    ((Ellipse) currentShape).setCorners(drawFrom.x, drawFrom.y, p.x, p.y);
+
+                    // Updating the moveFrom location based on the location of the center of the shape.
+                    moveFrom = new Point((int) (drawFrom.x + ((p.x - drawFrom.x) / 2.0)), (int) (drawFrom.y + ((p.y - drawFrom.y) / 2.0)));
+                }
+
+                else if (shapeType.equals("Rectangle"))
+                {
+                    ((Rectangle) currentShape).setCorners(drawFrom.x, drawFrom.y, p.x, p.y);
+
+                    // Updating the moveFrom location based on the location of the center of the shape.
+                    moveFrom = new Point((int) (drawFrom.x + ((p.x - drawFrom.x) / 2.0)), (int) (drawFrom.y + ((p.y - drawFrom.y) / 2.0)));
+                }
+
+                else if (shapeType.equals("Segment"))
+                {
+                    ((Segment) currentShape).setEnd(p.x, p.y);
+
+                    // Updating the moveFrom location based on the location of the center of the shape.
+                    moveFrom = new Point((int) ((p.x - drawFrom.x) / 2.0), (int) ((p.y - drawFrom.y) / 2.0));
+                }
+
+                // TODO - Polyline
+
+                // Refreshing the canvas when the appearance has changed.
+                repaint();
+            }
+        }
+
+        // In moving mode, (request to) drag the object, and keep track of where next step is from.
+        else if (mode == Editor.Mode.MOVE)
+        {
+            // Check to make sure there is a shape and that the shape contains the point.
+            if (currentShape != null && moveFrom != null && currentShape.contains(p.x, p.y))
+            {
+                if (currentShape.getID() != null)
+                {
+                    // Passing the move object request onto the server.
+                    communicator.send("MOVE " + currentShape.getID() + " " + (p.x - moveFrom.x) + " " + (p.y - moveFrom.y));
+                }
+
+                // Updating the moveFrom location based on the new point.
+                moveFrom = p;
+
+                // Refreshing the canvas when the appearance has changed.
+                repaint();
+            }
+        }
+    }
+
+    /**
+     * Helper Method - In drawing mode, pass the add new object request on to the server, in moving mode, release it.
+     */
+    private void handleRelease()
+    {
+        // Check to see if the mode is DRAW.
+        if (mode == Mode.DRAW)
+        {
+            // Passing the add new object request on to the server and updating the current shape.
+            communicator.send("ADD " + currentShape.toString());
+            currentShape = null;
+        }
+
+        // Refreshing the canvas when the appearance has changed. In moving mode, stop dragging the object.
+        repaint();
+    }
+
+    public static void main(String[] args)
+    {
+        SwingUtilities.invokeLater(new Runnable()
+        {
+            public void run()
+            {
+                new Editor();
+            }
+        });
+    }
 }

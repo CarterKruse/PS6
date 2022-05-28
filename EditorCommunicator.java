@@ -56,5 +56,4 @@ public class EditorCommunicator extends Thread {
 
 	// Send editor requests to the server
 	// TODO: YOUR CODE HERE
-	
 }
