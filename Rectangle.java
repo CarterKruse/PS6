@@ -13,7 +13,6 @@ public class Rectangle implements Shape
 {
     private int x1, y1, x2, y2; // Upper left and lower right.
     private Color color;
-    private String ID; // Used to distinguish between shapes when using multiple clients.
 
     /**
      * An "empty" rectangle, with only one point set so far.
@@ -34,16 +33,6 @@ public class Rectangle implements Shape
     {
         setCorners(x1, y1, x2, y2);
         this.color = color;
-    }
-
-    /**
-     * A rectangle defined by two corners and an ID.
-     */
-    public Rectangle(int x1, int y1, int x2, int y2, Color color, String ID)
-    {
-        setCorners(x1, y1, x2, y2);
-        this.color = color;
-        this.ID = ID;
     }
 
     /**
@@ -80,18 +69,6 @@ public class Rectangle implements Shape
     }
 
     @Override
-    public String getID()
-    {
-        return ID;
-    }
-
-    @Override
-    public void setID(String ID)
-    {
-        this.ID = ID;
-    }
-
-    @Override
     public boolean contains(int x, int y)
     {
         return ((x > x1) && (x < x2)) && ((y > y1) && (y > y2));
@@ -106,9 +83,6 @@ public class Rectangle implements Shape
 
     public String toString()
     {
-        if (ID == null)
-            return "Rectangle " + x1 + " " + y1 + " " + x2 + " " + y2 + " " + color.getRGB();
-        else
-            return "Rectangle " + x1 + " " + y1 + " " + x2 + " " + y2 + " " + color.getRGB() + " " + ID;
+        return "Rectangle " + x1 + " " + y1 + " " + x2 + " " + y2 + " " + color.getRGB();
     }
 }

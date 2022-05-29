@@ -12,7 +12,6 @@ public class Segment implements Shape
 {
     private int x1, y1, x2, y2; // Two Endpoints
     private Color color;
-    private String ID; // Used to distinguish between shapes when using multiple clients.
 
     /**
      * An initial 0-length segment at a point.
@@ -36,19 +35,6 @@ public class Segment implements Shape
         this.x2 = x2;
         this.y2 = y2;
         this.color = color;
-    }
-
-    /**
-     * A complete segment from one point to the other and an ID.
-     */
-    public Segment(int x1, int y1, int x2, int y2, Color color, String ID)
-    {
-        this.x1 = x1;
-        this.y1 = y1;
-        this.x2 = x2;
-        this.y2 = y2;
-        this.color = color;
-        this.ID = ID;
     }
 
     /**
@@ -88,18 +74,6 @@ public class Segment implements Shape
     public void setColor(Color color)
     {
         this.color = color;
-    }
-
-    @Override
-    public String getID()
-    {
-        return ID;
-    }
-
-    @Override
-    public void setID(String ID)
-    {
-        this.ID = ID;
     }
 
     @Override
@@ -148,9 +122,6 @@ public class Segment implements Shape
     @Override
     public String toString()
     {
-        if (ID == null)
-            return "Segment " + x1 + " " + y1 + " " + x2 + " " + y2 + " " + color.getRGB();
-        else
-            return "Segment " + x1 + " " + y1 + " " + x2 + " " + y2 + " " + color.getRGB() + " " + ID;
+        return "Segment " + x1 + " " + y1 + " " + x2 + " " + y2 + " " + color.getRGB();
     }
 }
