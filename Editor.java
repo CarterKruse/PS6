@@ -31,6 +31,7 @@ public class Editor extends JFrame
     // Drawing State
     private Shape currentShape = null; // Current shape (if any) being drawn.
     private Sketch sketch; // Holds and handles all the completed objects.
+    private int currentShapeID = -1; // Current shape ID (if any; else -1) being moved.
     private Point drawFrom = null; // Where the drawing started.
     private Point moveFrom = null; // Where the object is as it's being dragged.
 
@@ -184,7 +185,7 @@ public class Editor extends JFrame
     public void drawSketch(Graphics g)
     {
         // Drawing all the shapes in the sketch.
-        for (Shape shape : sketch.getListOfShapes())
+        for (Shape shape : sketch.IDMap.values())
             shape.draw(g);
 
         // Drawing the shape currently being drawn in the editor (not yet part of the sketch).
@@ -202,7 +203,7 @@ public class Editor extends JFrame
      */
     private void handlePress(Point p)
     {
-        // In drawing mode, start a new object
+        // In drawing mode, start a new object.
         if (mode == Mode.DRAW)
         {
             // Updating the drawFrom and moveFrom points.
@@ -224,50 +225,22 @@ public class Editor extends JFrame
         // In moving mode, (request to) start dragging if clicked in a shape.
         else if (mode == Editor.Mode.MOVE)
         {
-            // Cycling through the list of shapes in the sketch.
-            for (Shape shape : sketch.getListOfShapes())
-            {
-                // If the shape contains the (x, y) point...
-                if (shape.contains(p.x, p.y) && shape.getID() != null)
-                {
-                    currentShape = shape;
-                    moveFrom = p;
-                    handleDrag(p);
-                }
-            }
+            currentShape = sketch.IDMap.get(sketch.IDFromClicked(p));
+            moveFrom = p;
+            handleDrag(p);
         }
 
         // In recoloring mode, (request to) change clicked shape's color.
         else if (mode == Mode.RECOLOR)
         {
-            // Cycling through the list of shapes in the sketch.
-            for (Shape shape : sketch.getListOfShapes())
-            {
-                // If the shape contains the (x, y) point...
-                if (shape.contains(p.x, p.y) && shape.getID() != null)
-                {
-                    // Passing the delete object request onto the server.
-                    communicator.send("RECOLOR " + shape.getID() + " " + color.getRGB());
-                }
-            }
-
+            communicator.send("RECOLOR " + sketch.IDFromClicked(p) + " " + color.getRGB());
             repaint();
         }
 
         // In deleting mode, (request to) delete clicked shape.
         else if (mode == Mode.DELETE)
         {
-            // Cycling through the list of shapes in the sketch.
-            for (Shape shape : sketch.getListOfShapes())
-            {
-                // If the shape contains the (x, y) point...
-                if (shape.contains(p.x, p.y) && shape.getID() != null)
-                {
-                    // Passing the delete object request onto the server.
-                    communicator.send("DELETE " + shape.getID());
-                }
-            }
-
+            communicator.send("DELETE " + sketch.IDFromClicked(p));
             repaint();
         }
     }
@@ -317,14 +290,9 @@ public class Editor extends JFrame
         // In moving mode, (request to) drag the object, and keep track of where next step is from.
         else if (mode == Editor.Mode.MOVE)
         {
-            // Check to make sure there is a shape and that the shape contains the point.
-            if (currentShape != null && moveFrom != null && currentShape.contains(p.x, p.y))
+            if (currentShape != null && moveFrom != null)
             {
-                if (currentShape.getID() != null)
-                {
-                    // Passing the move object request onto the server.
-                    communicator.send("MOVE " + currentShape.getID() + " " + (p.x - moveFrom.x) + " " + (p.y - moveFrom.y));
-                }
+                communicator.send("MOVE " + sketch.IDFromClicked(p) + " " + (p.x - moveFrom.x) + " " + (p.y - moveFrom.y));
 
                 // Updating the moveFrom location based on the new point.
                 moveFrom = p;
@@ -344,7 +312,8 @@ public class Editor extends JFrame
         if (mode == Mode.DRAW)
         {
             // Passing the add new object request on to the server and updating the current shape.
-            communicator.send("ADD " + currentShape.toString());
+            communicator.send("ADD " + currentShape);
+
             currentShape = null;
         }
 

@@ -13,20 +13,6 @@ import java.awt.Graphics;
 public interface Shape
 {
     /**
-     * Get ID
-     *
-     * @return The shape's ID.
-     */
-    public String getID();
-
-    /**
-     * Set ID
-     *
-     * @param ID The shape's ID.
-     */
-    public void setID(String ID);
-
-    /**
 	 * Move By - Moves the shape by dx in the x coordinate and dy in the y coordinate.
      */
     public void moveBy(int dx, int dy);

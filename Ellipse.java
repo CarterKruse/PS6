@@ -13,7 +13,6 @@ public class Ellipse implements Shape
 {
     private int x1, y1, x2, y2; // Upper left and lower right.
     private Color color;
-    private String ID; // Used to distinguish between shapes when using multiple clients.
 
     /**
      * An "empty" ellipse, with only one point set so far.
@@ -34,16 +33,6 @@ public class Ellipse implements Shape
     {
         setCorners(x1, y1, x2, y2);
         this.color = color;
-    }
-
-    /**
-     * An ellipse defined by two corners and an ID.
-     */
-    public Ellipse(int x1, int y1, int x2, int y2, Color color, String ID)
-    {
-        setCorners(x1, y1, x2, y2);
-        this.color = color;
-        this.ID = ID;
     }
 
     /**
@@ -91,18 +80,6 @@ public class Ellipse implements Shape
     }
 
     @Override
-    public String getID()
-    {
-        return ID;
-    }
-
-    @Override
-    public void setID(String ID)
-    {
-        this.ID = ID;
-    }
-
-    @Override
     public void draw(Graphics g)
     {
         g.setColor(color);
@@ -112,9 +89,6 @@ public class Ellipse implements Shape
     @Override
     public String toString()
     {
-        if (ID == null)
-            return "Ellipse " + x1 + " " + y1 + " " + x2 + " " + y2 + " " + color.getRGB();
-        else
-            return "Ellipse " + x1 + " " + y1 + " " + x2 + " " + y2 + " " + color.getRGB() + " " + ID;
+        return "Ellipse " + x1 + " " + y1 + " " + x2 + " " + y2 + " " + color.getRGB();
     }
 }

@@ -1,3 +1,4 @@
+import java.awt.*;
 import java.util.*;
 
 /**
@@ -9,43 +10,76 @@ import java.util.*;
 
 public class Sketch
 {
-    private List<Shape> listOfShapes;
+    Map<Integer, Shape> IDMap;
+    int IDIndex;
 
     /**
-     * Constructor - Initializes empty list of shapes.
+     * Constructor - Initializes the ID map and index.
      */
     public Sketch()
     {
-        this.listOfShapes = new ArrayList<Shape>();
+        IDMap = new HashMap<>();
+        IDIndex = 0;
     }
 
     /**
-     * Adds a shape to the list (and the editor).
+     * Clicked - Determines which shape is clicked by its ID.
+     *
+     * @param p The point to consider.
+     */
+    public int IDFromClicked(Point p)
+    {
+        for (int ID : IDMap.keySet())
+        {
+            if (IDMap.get(ID).contains(p.x, p.y))
+                return ID;
+        }
+
+        return -1;
+    }
+
+    /**
+     * Add Shape - Adds a shape to the map (and to the editor).
      *
      * @param shape The shape to add.
      */
-    public void addShape(Shape shape)
+    public synchronized void addShape(Shape shape)
     {
-        listOfShapes.add(shape);
+        IDMap.put(IDIndex, shape);
+        IDIndex += 1;
+    }
+
+    /**
+     * Move Shape - Moves a shape by dx and dy, depending on its ID.
+     *
+     * @param ID The ID of the shape to move.
+     * @param dx The x coordinate of movement.
+     * @param dy The y coordinate of movement.
+     */
+    public synchronized void moveShape(int ID, int dx, int dy)
+    {
+        IDMap.get(ID).moveBy(dx, dy);
+    }
+
+    /**
+     * Recolor Shape - Recolors a shape, depending on its ID.
+     *
+     * @param ID The ID of the shape to move.
+     * @param color The color to use when recoloring the shape.
+     */
+    public synchronized void recolorShape(int ID, Color color)
+    {
+        IDMap.get(ID).setColor(color);
     }
 
     /**
      * Deletes a shape from the list (and the editor), determined by ID.
+     *
+     * @param ID The ID of the shape to delete.
      */
-    public void deleteShape(Shape shapeToDelete)
+    public synchronized void deleteShape(int ID)
     {
-        if (shapeToDelete.getID() == null)
-            System.err.println("The shape has no ID.");
-
-        listOfShapes.removeIf(shape -> shape.getID().equals(shapeToDelete.getID()));
-    }
-
-    /**
-     * Returns the list of shapes.
-     */
-    public List<Shape> getListOfShapes()
-    {
-        return listOfShapes;
+        IDMap.remove(ID);
     }
 
     /**
@@ -56,12 +90,13 @@ public class Sketch
     {
         String output = "Sketch {";
 
-        Shape firstShape = listOfShapes.get(0);
-        output += firstShape.toString();
+        Shape firstShape = IDMap.get(0);
+        if (firstShape != null)
+            output += firstShape.toString();
 
-        for (int i = 1; i < listOfShapes.size(); i += 1)
+        for (int i = 1; i < IDMap.keySet().size(); i += 1)
         {
-            output += ", " + listOfShapes.get(i).toString() ;
+            output += ", " + IDMap.get(i).toString();
         }
 
         output += "}";
