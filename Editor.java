@@ -115,7 +115,7 @@ public class Editor extends JFrame
     private JComponent setupGUI()
     {
         // Select type of shape.
-        String[] shapes = {"Ellipse", "Freehand", "Rectangle", "Segment"};
+        String[] shapes = {"Ellipse", "Polyline", "Rectangle", "Segment"};
         JComboBox<String> shapeB = new JComboBox<>(shapes);
         shapeB.addActionListener(e -> shapeType = (String) ((JComboBox<String>) e.getSource()).getSelectedItem());
 
@@ -216,9 +216,8 @@ public class Editor extends JFrame
                 case "Ellipse" -> currentShape = new Ellipse(drawFrom.x, drawFrom.y, color);
                 case "Rectangle" -> currentShape = new Rectangle(drawFrom.x, drawFrom.y, color);
                 case "Segment" -> currentShape = new Segment(drawFrom.x, drawFrom.y, color);
+                case "Polyline" -> currentShape = new Polyline(drawFrom.x, drawFrom.y, color);
             }
-
-            // TODO - Polyline
         }
 
         // TODO - Check about sending a request to the server vs. simply handing the drag.
@@ -226,6 +225,7 @@ public class Editor extends JFrame
         else if (mode == Editor.Mode.MOVE)
         {
             currentShape = sketch.IDMap.get(sketch.IDFromClicked(p));
+            currentShapeID = sketch.IDFromClicked(p);
             moveFrom = p;
             handleDrag(p);
         }
@@ -280,6 +280,14 @@ public class Editor extends JFrame
                     moveFrom = new Point((int) ((p.x - drawFrom.x) / 2.0), (int) ((p.y - drawFrom.y) / 2.0));
                 }
 
+                else if (shapeType.equals("Polyline"))
+                {
+                    ((Polyline) currentShape).addPoint(p.x, p.y);
+
+                    // Updating the moveFrom location based on the location of the center of the shape.
+                    moveFrom = new Point((int) ((p.x - drawFrom.x) / 2.0), (int) ((p.y - drawFrom.y) / 2.0));
+                }
+
                 // TODO - Polyline
 
                 // Refreshing the canvas when the appearance has changed.
@@ -292,7 +300,7 @@ public class Editor extends JFrame
         {
             if (currentShape != null && moveFrom != null)
             {
-                communicator.send("MOVE " + sketch.IDFromClicked(p) + " " + (p.x - moveFrom.x) + " " + (p.y - moveFrom.y));
+                communicator.send("MOVE " + currentShapeID + " " + (p.x - moveFrom.x) + " " + (p.y - moveFrom.y));
 
                 // Updating the moveFrom location based on the new point.
                 moveFrom = p;

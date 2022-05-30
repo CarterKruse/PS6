@@ -10,41 +10,37 @@ import java.util.*;
 
 public class Sketch
 {
-    Map<Integer, Shape> IDMap;
-    int IDIndex;
+    // Instance Variables - IDMap to hold the IDs and corresponding shapes, and the current IDIndex.
+    Map<Integer, Shape> IDMap = new TreeMap<>();
+    static int IDIndex = 0;
 
     /**
-     * Constructor - Initializes the ID map and index.
-     */
-    public Sketch()
-    {
-        IDMap = new HashMap<>();
-        IDIndex = 0;
-    }
-
-    /**
-     * Clicked - Determines which shape is clicked by its ID.
+     * Determines which shape is clicked by its ID.
      *
      * @param p The point to consider.
      */
     public int IDFromClicked(Point p)
     {
+        // Cycling through all the IDs in the IDMap.
         for (int ID : IDMap.keySet())
         {
+            // If the IDMap shape contains the point, return the ID considered.
             if (IDMap.get(ID).contains(p.x, p.y))
                 return ID;
         }
 
+        // Else, return -1 to indicate that no shape was found.
         return -1;
     }
 
     /**
-     * Add Shape - Adds a shape to the map (and to the editor).
+     * Adds a shape to the map (and to the editor).
      *
      * @param shape The shape to add.
      */
     public synchronized void addShape(Shape shape)
     {
+        // Inputting the shape into the
         IDMap.put(IDIndex, shape);
         IDIndex += 1;
     }
@@ -58,7 +54,8 @@ public class Sketch
      */
     public synchronized void moveShape(int ID, int dx, int dy)
     {
-        IDMap.get(ID).moveBy(dx, dy);
+        if (IDMap.containsKey(ID))
+            IDMap.get(ID).moveBy(dx, dy);
     }
 
     /**
@@ -69,7 +66,8 @@ public class Sketch
      */
     public synchronized void recolorShape(int ID, Color color)
     {
-        IDMap.get(ID).setColor(color);
+        if (IDMap.containsKey(ID))
+            IDMap.get(ID).setColor(color);
     }
 
     /**
@@ -88,19 +86,23 @@ public class Sketch
     @Override
     public String toString()
     {
-        String output = "Sketch {";
+        String output = "Sketch ";
 
-        Shape firstShape = IDMap.get(0);
-        if (firstShape != null)
-            output += firstShape.toString();
+        output += IDMap;
 
-        for (int i = 1; i < IDMap.keySet().size(); i += 1)
-        {
-            output += ", " + IDMap.get(i).toString();
-        }
+//        Shape firstShape = IDMap.get(0);
+//        if (firstShape != null)
+//            output += firstShape.toString();
+//
+//        for (int i = 1; i < IDMap.keySet().size(); i += 1)
+//        {
+//            if (IDMap.get(i) != null)
+//                output += ", " + IDMap.get(i).toString();
+//        }
+//
+//        output += "}";
 
-        output += "}";
-
+        System.out.println(output);
         return output;
     }
 }

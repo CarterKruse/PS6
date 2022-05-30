@@ -15,7 +15,11 @@ public class Ellipse implements Shape
     private Color color;
 
     /**
-     * An "empty" ellipse, with only one point set so far.
+     * An "empty" ellipse, with only one point set so far, with a color.
+     *
+     * @param x1    The x coordinate of the point.
+     * @param y1    The y coordinate of the point.
+     * @param color The color of the Ellipse.
      */
     public Ellipse(int x1, int y1, Color color)
     {
@@ -27,7 +31,13 @@ public class Ellipse implements Shape
     }
 
     /**
-     * An ellipse defined by two corners.
+     * An ellipse defined by two corners and a color.
+     *
+     * @param x1    The x coordinate of one of the corners.
+     * @param y1    The y coordinate of one of the corners.
+     * @param x2    The x coordinate of one of the corners.
+     * @param y2    The y coordinate of one of the corners.
+     * @param color The color of the Ellipse.
      */
     public Ellipse(int x1, int y1, int x2, int y2, Color color)
     {
@@ -37,6 +47,11 @@ public class Ellipse implements Shape
 
     /**
      * Redefines the ellipse based on new corners.
+     *
+     * @param x1 The x coordinate of one of the corners.
+     * @param y1 The y coordinate of one of the corners.
+     * @param x2 The x coordinate of one of the corners.
+     * @param y2 The y coordinate of one of the corners.
      */
     public void setCorners(int x1, int y1, int x2, int y2)
     {
@@ -48,6 +63,15 @@ public class Ellipse implements Shape
     }
 
     @Override
+    public void moveBy(int dx, int dy)
+    {
+        x1 += dx;
+        y1 += dy;
+        x2 += dx;
+        y2 += dy;
+    }
+
+    @Override
     public boolean contains(int x, int y)
     {
         double a = (x2 - x1) / 2.0, b = (y2 - y1) / 2.0;
@@ -56,15 +80,6 @@ public class Ellipse implements Shape
 
         // Apply the standard geometry formula.
         return Math.pow(dx / a, 2) + Math.pow(dy / b, 2) <= 1;
-    }
-
-    @Override
-    public void moveBy(int dx, int dy)
-    {
-        x1 += dx;
-        y1 += dy;
-        x2 += dx;
-        y2 += dy;
     }
 
     @Override
