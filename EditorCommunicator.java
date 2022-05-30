@@ -76,6 +76,9 @@ public class EditorCommunicator extends Thread
                 if (command.equals("DELETE"))
                     handleDelete(message);
 
+                if (command.equals("Sketch"))
+                    initializeSketch(message);
+
                 editor.repaint();
             }
         }
@@ -93,28 +96,42 @@ public class EditorCommunicator extends Thread
 
     public synchronized void handleAdd(String message)
     {
-        String[] messageParts = message.split(" ");
-        if (messageParts.length < 7)
-            System.err.println("Invalid message from server.");
-
-        Shape shape = null;
-
-        if (messageParts[1].equals("Ellipse"))
-            shape = new Ellipse(Integer.parseInt(messageParts[2]), Integer.parseInt(messageParts[3]),
-                    Integer.parseInt(messageParts[4]), Integer.parseInt(messageParts[5]), new Color(Integer.parseInt(messageParts[6])));
-
-        if (messageParts[1].equals("Rectangle"))
-            shape = new Rectangle(Integer.parseInt(messageParts[2]), Integer.parseInt(messageParts[3]),
-                    Integer.parseInt(messageParts[4]), Integer.parseInt(messageParts[5]), new Color(Integer.parseInt(messageParts[6])));
-
-        if (messageParts[1].equals("Segment"))
-            shape = new Segment(Integer.parseInt(messageParts[2]), Integer.parseInt(messageParts[3]),
-                    Integer.parseInt(messageParts[4]), Integer.parseInt(messageParts[5]), new Color(Integer.parseInt(messageParts[6])));
-
-        if (shape != null)
+        if (!message.equals("ADD "))
         {
-            editor.getSketch().addShape(shape);
-            editor.repaint();
+            String[] messageParts = message.split(" ");
+            if (messageParts.length < 7)
+                System.err.println("Invalid message from server.");
+
+            Shape shape = null;
+
+            if (messageParts[1].equals("Ellipse"))
+                shape = new Ellipse(Integer.parseInt(messageParts[2]), Integer.parseInt(messageParts[3]),
+                        Integer.parseInt(messageParts[4]), Integer.parseInt(messageParts[5]), new Color(Integer.parseInt(messageParts[6])));
+
+            if (messageParts[1].equals("Rectangle"))
+                shape = new Rectangle(Integer.parseInt(messageParts[2]), Integer.parseInt(messageParts[3]),
+                        Integer.parseInt(messageParts[4]), Integer.parseInt(messageParts[5]), new Color(Integer.parseInt(messageParts[6])));
+
+            if (messageParts[1].equals("Segment"))
+                shape = new Segment(Integer.parseInt(messageParts[2]), Integer.parseInt(messageParts[3]),
+                        Integer.parseInt(messageParts[4]), Integer.parseInt(messageParts[5]), new Color(Integer.parseInt(messageParts[6])));
+
+            // TODO: How do we handle a Polyline?? By parsing? How do we get all the points.
+            if (messageParts[1].equals("Polyline"))
+            {
+                shape = new Polyline(Integer.parseInt(messageParts[2]), Integer.parseInt(messageParts[3]), new Color(Integer.parseInt(messageParts[messageParts.length - 1])));
+
+                for (int i = 4; i < messageParts.length - 1; i += 2)
+                {
+                    ((Polyline) shape).addPoint(Integer.parseInt(messageParts[i]), Integer.parseInt(messageParts[i + 1]));
+                }
+            }
+
+            if (shape != null)
+            {
+                editor.getSketch().addShape(shape);
+                editor.repaint();
+            }
         }
     }
 
@@ -143,6 +160,16 @@ public class EditorCommunicator extends Thread
             System.err.println("Invalid message from server.");
 
         editor.getSketch().deleteShape(Integer.parseInt(messageParts[1]));
+    }
+
+    public synchronized void initializeSketch(String message)
+    {
+        String[] shapes = message.substring(message.indexOf("{") + 1, message.indexOf("}")).split(", ");
+
+        for (String shape : shapes)
+        {
+            handleAdd("ADD " + shape.substring(shape.indexOf("=") + 1));
+        }
     }
 
     // Send editor requests to the server

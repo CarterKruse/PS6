@@ -9,28 +9,33 @@ import java.awt.Graphics;
  * @author CBK
  * @author Carter Kruse & John DeForest, Dartmouth CS 10, Spring 2022
  */
-
 public interface Shape
 {
     /**
-	 * Move By - Moves the shape by dx in the x coordinate and dy in the y coordinate.
+     * Move By - Moves the shape by dx in the x coordinate and dy in the y coordinate.
+     *
+     * @param dx The amount to move in the x direction.
+     * @param dy The amount to move in the y direction.
      */
     public void moveBy(int dx, int dy);
 
     /**
-	 * Contains - Whether the point is inside the shape.
+     * Contains - Whether the point is inside the shape.
+     *
+     * @param x The x coordinate of the point.
+     * @param y The y coordinate of the point.
      */
     public boolean contains(int x, int y);
 
     /**
-	 * Get Color
+     * Get Color
      *
      * @return The shape's color.
      */
     public Color getColor();
 
     /**
-	 * Set Color
+     * Set Color
      *
      * @param color The shape's color.
      */
@@ -38,6 +43,8 @@ public interface Shape
 
     /**
      * Draws the shape.
+     *
+     * @param g The graphics to use.
      */
     public void draw(Graphics g);
 }

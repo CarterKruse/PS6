@@ -15,7 +15,11 @@ public class Rectangle implements Shape
     private Color color;
 
     /**
-     * An "empty" rectangle, with only one point set so far.
+     * An "empty" rectangle, with only one point set so far, with a color.
+     *
+     * @param x1    The x coordinate of the point.
+     * @param y1    The y coordinate of the point.
+     * @param color The color of the Rectangle.
      */
     public Rectangle(int x1, int y1, Color color)
     {
@@ -27,7 +31,13 @@ public class Rectangle implements Shape
     }
 
     /**
-     * A rectangle defined by two corners.
+     * A rectangle defined by two corners and a color.
+     *
+     * @param x1    The x coordinate of one of the corners.
+     * @param y1    The y coordinate of one of the corners.
+     * @param x2    The x coordinate of one of the corners.
+     * @param y2    The y coordinate of one of the corners.
+     * @param color The color of the Rectangle.
      */
     public Rectangle(int x1, int y1, int x2, int y2, Color color)
     {
@@ -37,6 +47,11 @@ public class Rectangle implements Shape
 
     /**
      * Redefines the rectangle based on new corners.
+     *
+     * @param x1 The x coordinate of one of the corners.
+     * @param y1 The y coordinate of one of the corners.
+     * @param x2 The x coordinate of one of the corners.
+     * @param y2 The y coordinate of one of the corners.
      */
     public void setCorners(int x1, int y1, int x2, int y2)
     {
@@ -57,6 +72,12 @@ public class Rectangle implements Shape
     }
 
     @Override
+    public boolean contains(int x, int y)
+    {
+        return ((x > x1) && (x < x2)) && ((y > y1) && (y > y2));
+    }
+
+    @Override
     public Color getColor()
     {
         return color;
@@ -69,18 +90,13 @@ public class Rectangle implements Shape
     }
 
     @Override
-    public boolean contains(int x, int y)
-    {
-        return ((x > x1) && (x < x2)) && ((y > y1) && (y > y2));
-    }
-
-    @Override
     public void draw(Graphics g)
     {
         g.setColor(color);
         g.fillRect(x1, y1, x2 - x1, y2 - y1);
     }
 
+    @Override
     public String toString()
     {
         return "Rectangle " + x1 + " " + y1 + " " + x2 + " " + y2 + " " + color.getRGB();

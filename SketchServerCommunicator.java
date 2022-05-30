@@ -105,6 +105,17 @@ public class SketchServerCommunicator extends Thread
             shape = new Segment(Integer.parseInt(messageParts[2]), Integer.parseInt(messageParts[3]),
                     Integer.parseInt(messageParts[4]), Integer.parseInt(messageParts[5]), new Color(Integer.parseInt(messageParts[6])));
 
+        // TODO: How do we handle a Polyline?? By parsing? How do we get all the points.
+        if (messageParts[1].equals("Polyline"))
+        {
+            shape = new Polyline(Integer.parseInt(messageParts[2]), Integer.parseInt(messageParts[3]), new Color(Integer.parseInt(messageParts[messageParts.length - 1])));
+
+            for (int i = 4; i < messageParts.length - 1; i += 2)
+            {
+                ((Polyline) shape).addPoint(Integer.parseInt(messageParts[i]), Integer.parseInt(messageParts[i + 1]));
+            }
+        }
+
         if (shape != null)
         {
             server.getSketch().addShape(shape);

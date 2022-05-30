@@ -3,6 +3,7 @@ import java.awt.Graphics;
 
 /**
  * A Line Segment-Shaped Shape
+ * Defined by a start point (x1, y1) and an end point (x2, y2).
  *
  * @author Chris Bailey-Kellogg, Dartmouth CS 10, Fall 2012
  * @author CBK, Fall 2016
@@ -14,7 +15,11 @@ public class Segment implements Shape
     private Color color;
 
     /**
-     * An initial 0-length segment at a point.
+     * An initial 0-length segment at a point, with a color.
+     *
+     * @param x1    The x coordinate of the point.
+     * @param y1    The y coordinate of the point.
+     * @param color The color of the Segment.
      */
     public Segment(int x1, int y1, Color color)
     {
@@ -26,7 +31,13 @@ public class Segment implements Shape
     }
 
     /**
-     * A complete segment from one point to the other.
+     * A complete segment from one point to the other, with a color.
+     *
+     * @param x1    The x coordinate of the start point.
+     * @param y1    The y coordinate of the start point.
+     * @param x2    The x coordinate of the end point.
+     * @param y2    The y coordinate of the end point.
+     * @param color The color of the Segment.
      */
     public Segment(int x1, int y1, int x2, int y2, Color color)
     {
@@ -39,6 +50,9 @@ public class Segment implements Shape
 
     /**
      * Update the start (first point) of the segment.
+     *
+     * @param x1 The x coordinate of the start point.
+     * @param y1 The y coordinate of the start point.
      */
     public void setStart(int x1, int y1)
     {
@@ -48,6 +62,9 @@ public class Segment implements Shape
 
     /**
      * Update the end (second point) of the segment.
+     *
+     * @param x2 The x coordinate of the end point.
+     * @param y2 The y coordinate of the end point.
      */
     public void setEnd(int x2, int y2)
     {
@@ -105,7 +122,12 @@ public class Segment implements Shape
     }
 
     /**
-     * Euclidean distance squared between (x1,y1) and (x2,y2)
+     * Euclidean distance squared between (x1,y1) and (x2,y2).
+     *
+     * @param x1 The x coordinate of the first point.
+     * @param y1 The y coordinate of the first point.
+     * @param x2 The x coordinate of the second point.
+     * @param y2 The y coordinate of the second point.
      */
     public static double dist2(double x1, double y1, double x2, double y2)
     {

@@ -18,7 +18,11 @@ public class Polyline implements Shape
     private Color color;
 
     /**
-     * An initial 0-length segment at a point.
+     * An initial 0-length segment at a point, with a color.
+     *
+     * @param x1 The x-coordinate of the point.
+     * @param y1 The y-coordinate of the point.
+     * @param color The Color of the Polyline.
      */
     public Polyline(int x1, int y1, Color color)
     {
@@ -28,7 +32,13 @@ public class Polyline implements Shape
     }
 
     /**
-     * A complete segment from one point to the other.
+     * A complete segment from one point to the other, with a color.
+     *
+     * @param x1    The x coordinate of the start point.
+     * @param y1    The y coordinate of the start point.
+     * @param x2    The x coordinate of the end point.
+     * @param y2    The y coordinate of the end point.
+     * @param color The color of the Segment.
      */
     public Polyline(int x1, int y1, int x2, int y2, Color color)
     {
@@ -39,7 +49,18 @@ public class Polyline implements Shape
     }
 
     /**
-     * Move By - Moves each segment of the polyline by the specified amount.
+     * Adding a Point to the List, which allows for "freehand" drawing.
+     *
+     * @param x2 The x coordinate of the Point to add.
+     * @param y2 The y coordinate of the Point to add.
+     */
+    public void addPoint(int x2, int y2)
+    {
+        points.add(new Point(x2, y2));
+    }
+
+    /**
+     * Moves each segment of the polyline by the specified amount.
      *
      * @param dx The x movement in the polyline.
      * @param dy The y movement in the polyline.
@@ -68,7 +89,7 @@ public class Polyline implements Shape
     }
 
     /**
-     * Contains Method - Utilizes the static function in Segment.java to determine if a point is within the polyline shape.
+     * Contains Method - Utilizes the static function in Segment.java to determine if a point is within the Polyline shape.
      *
      * @param x The x coordinate of the point to consider.
      * @param y The y coordinate of the point to consider.
@@ -79,17 +100,19 @@ public class Polyline implements Shape
         // Cycling through each segment of the polyline.
         for (int i = 0; i < points.size() - 1; i += 1)
         {
+            // Checking to see if the point is close enough to the Polyline shape.
             if (Segment.pointToSegmentDistance(x, y, points.get(i).x, points.get(i).y, points.get(i + 1).x, points.get(i + 1).y) <= 3)
                 return true;
         }
 
+        // Otherwise, return false.
         return false;
     }
 
     /**
-     * Draw - Cycles through each segment of the polyline, drawing them in order.
+     * Draw - Cycles through each segment of the Polyline, drawing them in order.
      *
-     * @param g The graphics to use when drawing the polyline.
+     * @param g The graphics to use when drawing the Polyline.
      */
     @Override
     public void draw(Graphics g)
