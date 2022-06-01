@@ -11,7 +11,7 @@ import java.util.*;
 public class Sketch
 {
     // Instance Variables - IDMap to hold the IDs and corresponding shapes, and the current IDIndex.
-    Map<Integer, Shape> IDMap = new TreeMap<>();
+    TreeMap<Integer, Shape> IDMap = new TreeMap<>();
     static int IDIndex = 0;
 
     /**
@@ -89,18 +89,6 @@ public class Sketch
         String output = "Sketch ";
 
         output += IDMap;
-
-//        Shape firstShape = IDMap.get(0);
-//        if (firstShape != null)
-//            output += firstShape.toString();
-//
-//        for (int i = 1; i < IDMap.keySet().size(); i += 1)
-//        {
-//            if (IDMap.get(i) != null)
-//                output += ", " + IDMap.get(i).toString();
-//        }
-//
-//        output += "}";
 
         System.out.println(output);
         return output;

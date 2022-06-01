@@ -182,16 +182,33 @@ public class Editor extends JFrame
      * Draw Sketch - Draws all the shapes in the sketch, along with the object currently being drawn in this editor (not
      * yet part of the sketch).
      */
-    public void drawSketch(Graphics g)
+    public synchronized void drawSketch(Graphics g)
     {
-        // Drawing all the shapes in the sketch.
-        for (Shape shape : sketch.IDMap.values())
-            shape.draw(g);
+        if (!sketch.IDMap.isEmpty())
+        {
+            // Drawing all the shapes in the sketch.
+            for (int i = 0; i <= sketch.IDMap.lastKey(); i += 1)
+            {
+                if (sketch.IDMap.containsKey(i))
+                    sketch.IDMap.get(i).draw(g);
+            }
+        }
+
+//        for (int i : sketch.IDMap.keySet())
+//            sketch.IDMap.get(i).draw(g);
+        // The for loop elements are modified while going through the for loop, which causes issues.
+        // The method above uses indexing to fix the issue, which seems to work, but the map cannot be empty.
+        // So I added that clause at the beginning.
+
+//        for (Shape shape : sketch.IDMap.values())
+//            shape.draw(g);
 
         // Drawing the shape currently being drawn in the editor (not yet part of the sketch).
         // If the current shape exists...
         if (currentShape != null)
             currentShape.draw(g); // Draw it.
+
+        repaint();
     }
 
     // Helpers For Event Handlers
@@ -234,7 +251,6 @@ public class Editor extends JFrame
         else if (mode == Mode.RECOLOR)
         {
             communicator.send("RECOLOR " + sketch.IDFromClicked(p) + " " + color.getRGB());
-            repaint();
         }
 
         // In deleting mode, (request to) delete clicked shape.
@@ -243,6 +259,8 @@ public class Editor extends JFrame
             communicator.send("DELETE " + sketch.IDFromClicked(p));
             repaint();
         }
+
+        repaint();
     }
 
     /**
@@ -289,9 +307,6 @@ public class Editor extends JFrame
                 }
 
                 // TODO - Polyline
-
-                // Refreshing the canvas when the appearance has changed.
-                repaint();
             }
         }
 
@@ -304,11 +319,11 @@ public class Editor extends JFrame
 
                 // Updating the moveFrom location based on the new point.
                 moveFrom = p;
-
-                // Refreshing the canvas when the appearance has changed.
-                repaint();
             }
         }
+
+        // Refreshing the canvas when the appearance has changed.
+        repaint();
     }
 
     /**
