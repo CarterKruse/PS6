@@ -1,6 +1,7 @@
 import java.awt.*;
 import java.io.*;
 import java.net.Socket;
+import java.util.Iterator;
 
 /**
  * Editor Communicator - Handles communication to/from the server for the editor.
@@ -160,6 +161,7 @@ public class EditorCommunicator extends Thread
             System.err.println("Invalid message from server.");
 
         editor.getSketch().deleteShape(Integer.parseInt(messageParts[1]));
+        editor.repaint();
     }
 
     public synchronized void initializeSketch(String message)

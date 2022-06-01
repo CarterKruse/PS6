@@ -151,5 +151,7 @@ public class SketchServerCommunicator extends Thread
 
         server.getSketch().deleteShape(Integer.parseInt(messageParts[1]));
         server.broadcast(message);
+
+        // System.out.println(server.getSketch());
     }
 }
