@@ -1,7 +1,6 @@
 import java.awt.*;
 import java.io.*;
 import java.net.Socket;
-import java.util.Iterator;
 
 /**
  * Editor Communicator - Handles communication to/from the server for the editor.
@@ -54,6 +53,7 @@ public class EditorCommunicator extends Thread
     {
         try
         {
+            // Keep getting and handling messages from the client.
             String message;
             while ((message = in.readLine()) != null)
             {
@@ -63,6 +63,7 @@ public class EditorCommunicator extends Thread
                 if (messageParts.length < 2)
                     System.err.println("Invalid message from server.");
 
+                // The first element of the message parts is the command to use.
                 String command = messageParts[0];
 
                 if (command.equals("ADD"))
@@ -77,10 +78,8 @@ public class EditorCommunicator extends Thread
                 if (command.equals("DELETE"))
                     handleDelete(message);
 
-                if (command.equals("Sketch"))
-                    initializeSketch(message);
-
-                editor.repaint();
+                if (command.equals("ADD_ID"))
+                    handleAddID(message);
             }
         }
 
@@ -95,85 +94,148 @@ public class EditorCommunicator extends Thread
         }
     }
 
+    /**
+     * Helper Function - Adds a given shape in the client sketches.
+     *
+     * @param message The message to pass through the method.
+     */
     public synchronized void handleAdd(String message)
     {
-        if (!message.equals("ADD "))
+        // Ensuring the input is appropriate.
+        String[] messageParts = message.split(" ");
+        if (messageParts.length < 7)
+            System.err.println("Invalid message from server.");
+
+        Shape shape = null;
+
+        // Creating a new shape based on the shape type.
+        if (messageParts[1].equals("Ellipse"))
+            shape = new Ellipse(Integer.parseInt(messageParts[2]), Integer.parseInt(messageParts[3]),
+                    Integer.parseInt(messageParts[4]), Integer.parseInt(messageParts[5]), new Color(Integer.parseInt(messageParts[6])));
+
+        if (messageParts[1].equals("Rectangle"))
+            shape = new Rectangle(Integer.parseInt(messageParts[2]), Integer.parseInt(messageParts[3]),
+                    Integer.parseInt(messageParts[4]), Integer.parseInt(messageParts[5]), new Color(Integer.parseInt(messageParts[6])));
+
+        if (messageParts[1].equals("Segment"))
+            shape = new Segment(Integer.parseInt(messageParts[2]), Integer.parseInt(messageParts[3]),
+                    Integer.parseInt(messageParts[4]), Integer.parseInt(messageParts[5]), new Color(Integer.parseInt(messageParts[6])));
+
+        if (messageParts[1].equals("Polyline"))
         {
-            String[] messageParts = message.split(" ");
-            if (messageParts.length < 7)
-                System.err.println("Invalid message from server.");
+            shape = new Polyline(Integer.parseInt(messageParts[2]), Integer.parseInt(messageParts[3]), new Color(Integer.parseInt(messageParts[messageParts.length - 1])));
 
-            Shape shape = null;
-
-            if (messageParts[1].equals("Ellipse"))
-                shape = new Ellipse(Integer.parseInt(messageParts[2]), Integer.parseInt(messageParts[3]),
-                        Integer.parseInt(messageParts[4]), Integer.parseInt(messageParts[5]), new Color(Integer.parseInt(messageParts[6])));
-
-            if (messageParts[1].equals("Rectangle"))
-                shape = new Rectangle(Integer.parseInt(messageParts[2]), Integer.parseInt(messageParts[3]),
-                        Integer.parseInt(messageParts[4]), Integer.parseInt(messageParts[5]), new Color(Integer.parseInt(messageParts[6])));
-
-            if (messageParts[1].equals("Segment"))
-                shape = new Segment(Integer.parseInt(messageParts[2]), Integer.parseInt(messageParts[3]),
-                        Integer.parseInt(messageParts[4]), Integer.parseInt(messageParts[5]), new Color(Integer.parseInt(messageParts[6])));
-
-            // TODO: How do we handle a Polyline?? By parsing? How do we get all the points.
-            if (messageParts[1].equals("Polyline"))
+            for (int i = 4; i < messageParts.length - 1; i += 2)
             {
-                shape = new Polyline(Integer.parseInt(messageParts[2]), Integer.parseInt(messageParts[3]), new Color(Integer.parseInt(messageParts[messageParts.length - 1])));
-
-                for (int i = 4; i < messageParts.length - 1; i += 2)
-                {
-                    ((Polyline) shape).addPoint(Integer.parseInt(messageParts[i]), Integer.parseInt(messageParts[i + 1]));
-                }
+                ((Polyline) shape).addPoint(Integer.parseInt(messageParts[i]), Integer.parseInt(messageParts[i + 1]));
             }
+        }
 
-            if (shape != null)
-            {
-                editor.getSketch().addShape(shape);
-                editor.repaint();
-            }
+        // Checking to make sure the shape is present.
+        if (shape != null)
+        {
+            // Adding the shape to the editor sketch and repainting the editor.
+            editor.getSketch().addShape(shape);
+            editor.repaint();
         }
     }
 
+    /**
+     * Helper Function - Moves a given shape in the client sketches.
+     *
+     * @param message The message to pass through the method.
+     */
     public synchronized void handleMove(String message)
     {
+        // Ensuring the input is appropriate.
         String[] messageParts = message.split(" ");
         if (messageParts.length < 4)
             System.err.println("Invalid message from server.");
 
+        // Modifying the editor sketch and repainting the editor.
         editor.getSketch().moveShape(Integer.parseInt(messageParts[1]), Integer.parseInt(messageParts[2]), Integer.parseInt(messageParts[3]));
+        editor.repaint();
     }
 
+    /**
+     * Helper Function - Recolors a given shape in the client sketches.
+     *
+     * @param message The message to pass through the method.
+     */
     public synchronized void handleRecolor(String message)
     {
+        // Ensuring the input is appropriate.
         String[] messageParts = message.split(" ");
         if (messageParts.length < 3)
             System.err.println("Invalid message from server.");
 
+        // Modifying the editor sketch and repainting the editor.
         editor.getSketch().recolorShape(Integer.parseInt(messageParts[1]), new Color(Integer.parseInt(messageParts[2])));
+        editor.repaint();
     }
 
+    /**
+     * Helper Function - Deletes a given shape in the client sketches.
+     *
+     * @param message The message to pass through the method.
+     */
     public synchronized void handleDelete(String message)
     {
+        // Ensuring the input is appropriate.
         String[] messageParts = message.split(" ");
         if (messageParts.length < 2)
             System.err.println("Invalid message from server.");
 
+        // Modifying the editor sketch and repainting the editor.
         editor.getSketch().deleteShape(Integer.parseInt(messageParts[1]));
         editor.repaint();
+
     }
 
-    public synchronized void initializeSketch(String message)
+    /**
+     * Helper Function - Adds a given shape in the client sketch, with an ID index.
+     * Specifically used when new editors are introduced to the server, to initialize the editor.
+     *
+     * @param message The message to pass through the method.
+     */
+    public synchronized void handleAddID(String message)
     {
-        String[] shapes = message.substring(message.indexOf("{") + 1, message.indexOf("}")).split(", ");
+        // Ensuring the input is appropriate.
+        String[] messageParts = message.split(" ");
+        if (messageParts.length < 8)
+            System.err.println("Invalid message from server.");
 
-        for (String shape : shapes)
+        Shape shape = null;
+
+        // Creating a new shape based on the shape type.
+        if (messageParts[2].equals("Ellipse"))
+            shape = new Ellipse(Integer.parseInt(messageParts[3]), Integer.parseInt(messageParts[4]),
+                    Integer.parseInt(messageParts[5]), Integer.parseInt(messageParts[6]), new Color(Integer.parseInt(messageParts[7])));
+
+        if (messageParts[2].equals("Rectangle"))
+            shape = new Rectangle(Integer.parseInt(messageParts[3]), Integer.parseInt(messageParts[4]),
+                    Integer.parseInt(messageParts[5]), Integer.parseInt(messageParts[6]), new Color(Integer.parseInt(messageParts[7])));
+
+        if (messageParts[2].equals("Segment"))
+            shape = new Segment(Integer.parseInt(messageParts[3]), Integer.parseInt(messageParts[4]),
+                    Integer.parseInt(messageParts[5]), Integer.parseInt(messageParts[6]), new Color(Integer.parseInt(messageParts[7])));
+
+        if (messageParts[2].equals("Polyline"))
         {
-            handleAdd("ADD " + shape.substring(shape.indexOf("=") + 1));
+            shape = new Polyline(Integer.parseInt(messageParts[3]), Integer.parseInt(messageParts[4]), new Color(Integer.parseInt(messageParts[messageParts.length - 1])));
+
+            for (int i = 5; i < messageParts.length - 1; i += 2)
+            {
+                ((Polyline) shape).addPoint(Integer.parseInt(messageParts[i]), Integer.parseInt(messageParts[i + 1]));
+            }
+        }
+
+        // Checking to make sure the shape is present.
+        if (shape != null)
+        {
+            // Adding the shape to the editor sketch and repainting the editor.
+            editor.getSketch().addShape(Integer.parseInt(messageParts[1]), shape);
+            editor.repaint();
         }
     }
-
-    // Send editor requests to the server
-    // TODO: YOUR CODE HERE
 }

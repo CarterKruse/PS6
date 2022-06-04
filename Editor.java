@@ -194,15 +194,6 @@ public class Editor extends JFrame
             }
         }
 
-//        for (int i : sketch.IDMap.keySet())
-//            sketch.IDMap.get(i).draw(g);
-        // The for loop elements are modified while going through the for loop, which causes issues.
-        // The method above uses indexing to fix the issue, which seems to work, but the map cannot be empty.
-        // So I added that clause at the beginning.
-
-//        for (Shape shape : sketch.IDMap.values())
-//            shape.draw(g);
-
         // Drawing the shape currently being drawn in the editor (not yet part of the sketch).
         // If the current shape exists...
         if (currentShape != null)
@@ -210,8 +201,6 @@ public class Editor extends JFrame
 
         repaint();
     }
-
-    // Helpers For Event Handlers
 
     /**
      * Helper Method - In drawing mode, start a new object, in moving mode, (request to) start dragging if clicked in a
@@ -237,27 +226,32 @@ public class Editor extends JFrame
             }
         }
 
-        // TODO - Check about sending a request to the server vs. simply handing the drag.
         // In moving mode, (request to) start dragging if clicked in a shape.
         else if (mode == Editor.Mode.MOVE)
         {
-            currentShape = sketch.IDMap.get(sketch.IDFromClicked(p));
-            currentShapeID = sketch.IDFromClicked(p);
-            moveFrom = p;
-            handleDrag(p);
+            // Checking to make sure an object was clicked.
+            if (sketch.IDFromClicked(p) != -1)
+            {
+                currentShapeID = sketch.IDFromClicked(p);
+                currentShape = sketch.IDMap.get(sketch.IDFromClicked(p));
+                moveFrom = p;
+            }
         }
 
         // In recoloring mode, (request to) change clicked shape's color.
         else if (mode == Mode.RECOLOR)
         {
-            communicator.send("RECOLOR " + sketch.IDFromClicked(p) + " " + color.getRGB());
+            // Checking to make sure an object was clicked.
+            if (sketch.IDFromClicked(p) != -1)
+                communicator.send("RECOLOR " + sketch.IDFromClicked(p) + " " + color.getRGB());
         }
 
         // In deleting mode, (request to) delete clicked shape.
         else if (mode == Mode.DELETE)
         {
-            communicator.send("DELETE " + sketch.IDFromClicked(p));
-            repaint();
+            // Checking to make sure an object was clicked.
+            if (sketch.IDFromClicked(p) != -1)
+                communicator.send("DELETE " + sketch.IDFromClicked(p));
         }
 
         repaint();
@@ -305,8 +299,6 @@ public class Editor extends JFrame
                     // Updating the moveFrom location based on the location of the center of the shape.
                     moveFrom = new Point((int) ((p.x - drawFrom.x) / 2.0), (int) ((p.y - drawFrom.y) / 2.0));
                 }
-
-                // TODO - Polyline
             }
         }
 
@@ -336,9 +328,9 @@ public class Editor extends JFrame
         {
             // Passing the add new object request on to the server and updating the current shape.
             communicator.send("ADD " + currentShape);
-
-            currentShape = null;
         }
+
+        currentShape = null;
 
         // Refreshing the canvas when the appearance has changed. In moving mode, stop dragging the object.
         repaint();

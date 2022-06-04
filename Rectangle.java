@@ -74,7 +74,7 @@ public class Rectangle implements Shape
     @Override
     public boolean contains(int x, int y)
     {
-        return ((x > x1) && (x < x2)) && ((y > y1) && (y > y2));
+        return ((x >= x1) && (x <= x2)) && ((y >= y1) && (y <= y2));
     }
 
     @Override
