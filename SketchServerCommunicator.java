@@ -43,10 +43,10 @@ public class SketchServerCommunicator extends Thread
             out = new PrintWriter(socket.getOutputStream(), true);
 
             // Tell the client the current state of the world.
-            send(server.getSketch().toString());
-            // TODO: YOUR CODE HERE
+            for (int ID : server.getSketch().IDMap.keySet())
+                send("ADD_ID " + ID + " " + server.getSketch().IDMap.get(ID));
 
-            // Keep getting and handling messages from the client
+            // Keep getting and handling messages from the client.
             String message;
             while ((message = in.readLine()) != null)
             {
@@ -56,6 +56,7 @@ public class SketchServerCommunicator extends Thread
                 if (messageParts.length < 2)
                     System.err.println("Invalid message from client.");
 
+                // The first element of the message parts is the command to use.
                 String command = messageParts[0];
 
                 if (command.equals("ADD"))
@@ -70,7 +71,6 @@ public class SketchServerCommunicator extends Thread
                 if (command.equals("DELETE"))
                     handleDelete(message);
             }
-            // TODO: YOUR CODE HERE
 
             // Clean Up - Note that also remove self from server's list so it doesn't broadcast here.
             server.removeCommunicator(this);
@@ -85,14 +85,21 @@ public class SketchServerCommunicator extends Thread
         }
     }
 
+    /**
+     * Helper Function - Adds a given shape in the server sketch and client sketches.
+     *
+     * @param message The message to pass through the method.
+     */
     public synchronized void handleAdd(String message)
     {
+        // Ensuring the input is appropriate.
         String[] messageParts = message.split(" ");
         if (messageParts.length < 7)
             System.err.println("Invalid message from client.");
 
         Shape shape = null;
 
+        // Creating a new shape based on the shape type.
         if (messageParts[1].equals("Ellipse"))
             shape = new Ellipse(Integer.parseInt(messageParts[2]), Integer.parseInt(messageParts[3]),
                     Integer.parseInt(messageParts[4]), Integer.parseInt(messageParts[5]), new Color(Integer.parseInt(messageParts[6])));
@@ -105,7 +112,6 @@ public class SketchServerCommunicator extends Thread
             shape = new Segment(Integer.parseInt(messageParts[2]), Integer.parseInt(messageParts[3]),
                     Integer.parseInt(messageParts[4]), Integer.parseInt(messageParts[5]), new Color(Integer.parseInt(messageParts[6])));
 
-        // TODO: How do we handle a Polyline?? By parsing? How do we get all the points.
         if (messageParts[1].equals("Polyline"))
         {
             shape = new Polyline(Integer.parseInt(messageParts[2]), Integer.parseInt(messageParts[3]), new Color(Integer.parseInt(messageParts[messageParts.length - 1])));
@@ -116,42 +122,63 @@ public class SketchServerCommunicator extends Thread
             }
         }
 
+        // Checking to make sure the shape is present.
         if (shape != null)
         {
+            // Adding the shape to the server sketch and broadcasting the message.
             server.getSketch().addShape(shape);
             server.broadcast("ADD " + shape);
         }
     }
 
+    /**
+     * Helper Function - Moves a given shape in the server sketch and client sketches.
+     *
+     * @param message The message to pass through the method.
+     */
     public synchronized void handleMove(String message)
     {
+
         String[] messageParts = message.split(" ");
         if (messageParts.length < 4)
             System.err.println("Invalid message from client.");
 
+        // Modifying the server sketch and broadcasting the message.
         server.getSketch().moveShape(Integer.parseInt(messageParts[1]), Integer.parseInt(messageParts[2]), Integer.parseInt(messageParts[3]));
         server.broadcast(message);
     }
 
+    /**
+     * Helper Function - Recolors a given shape in the server sketch and client sketches.
+     *
+     * @param message The message to pass through the method.
+     */
     public synchronized void handleRecolor(String message)
     {
+        // Ensuring the input is appropriate.
         String[] messageParts = message.split(" ");
         if (messageParts.length < 3)
             System.err.println("Invalid message from client.");
 
+        // Modifying the server sketch and broadcasting the message.
         server.getSketch().recolorShape(Integer.parseInt(messageParts[1]), new Color(Integer.parseInt(messageParts[2])));
         server.broadcast(message);
     }
 
+    /**
+     * Helper Function - Deletes a given shape in the server sketch and client sketches.
+     *
+     * @param message The message to pass through the method.
+     */
     public synchronized void handleDelete(String message)
     {
+        // Ensuring the input is appropriate.
         String[] messageParts = message.split(" ");
         if (messageParts.length < 2)
             System.err.println("Invalid message from client.");
 
+        // Modifying the server sketch and broadcasting the message.
         server.getSketch().deleteShape(Integer.parseInt(messageParts[1]));
         server.broadcast(message);
-
-        // System.out.println(server.getSketch());
     }
 }
